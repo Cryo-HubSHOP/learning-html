@@ -1,21 +1,46 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Mon Site</title>
+    <title>Cryo Hub</title>
+
+    <style>
+        body {
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+
+            background-image: url('https://i.ibb.co/NgSczVLG/fortnite-background-34h5tua0czqu7u9t.jpg');
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
+        }
+
+        .purchase-button {
+            width: 350px;
+            height: 90px;
+            font-size: 35px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            background: white;
+            color: green;
+            font-weight: bold;
+        }
+
+        .purchase-button:hover {
+            transform: scale(1.05);
+        }
+    </style>
 </head>
 
 <body>
 
-    <!-- Grande image -->
-    <img src="https://i.ibb.co/6chG1Zq8/943cd079-75a3-4585-9f09-e1c751592708.png"
-         style="width:100%; height:500px; object-fit:cover;">
-
-    <br><br>
-
-    <!-- Bouton -->
-    <button onclick="window.location.href='https://cryo-hubshop.github.io/Cryo-Hub-SHOP/'">
-        Test
-    </button>
+<button class="purchase-button"
+onclick="window.location.href='https://cryo-hubshop.github.io/Cryo-Hub-SHOP/'">
+    PURCHASE
+</button>
 
 </body>
 </html>
