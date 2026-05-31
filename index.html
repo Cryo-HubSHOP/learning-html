@@ -1,46 +1,185 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Cryo Hub</title>
+<meta charset="UTF-8">
+<title>Mini Mario 2D</title>
 
-    <style>
-        body {
-            margin: 0;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
+<style>
+body{
+    margin:0;
+    overflow:hidden;
+    background:#5ec9ff;
+}
 
-            background-image: url('https://i.ibb.co/NgSczVLG/fortnite-background-34h5tua0czqu7u9t.jpg');
-            background-size: cover;
-            background-position: center;
-            background-repeat: no-repeat;
-        }
-
-        .purchase-button {
-            width: 350px;
-            height: 90px;
-            font-size: 35px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            background: white;
-            color: green;
-            font-weight: bold;
-        }
-
-        .purchase-button:hover {
-            transform: scale(1.05);
-        }
-    </style>
+canvas{
+    display:block;
+    background:linear-gradient(#5ec9ff,#8be0ff);
+}
+</style>
 </head>
 
 <body>
 
-<button class="purchase-button"
-onclick="window.location.href='https://cryo-hubshop.github.io/Cryo-Hub-SHOP/'">
-    PURCHASE
-</button>
+<canvas id="game"></canvas>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+canvas.width = window.innerWidth;
+canvas.height = window.innerHeight;
+
+const gravity = 0.8;
+
+const player = {
+    x:100,
+    y:100,
+    width:50,
+    height:50,
+    speed:6,
+    velX:0,
+    velY:0,
+    jumping:false
+};
+
+const keys = {};
+
+const platforms = [
+    {x:0, y:canvas.height-60, width:3000, height:60},
+    {x:300, y:canvas.height-180, width:200, height:20},
+    {x:600, y:canvas.height-280, width:200, height:20},
+    {x:950, y:canvas.height-220, width:200, height:20},
+    {x:1300, y:canvas.height-320, width:250, height:20},
+    {x:1700, y:canvas.height-250, width:200, height:20}
+];
+
+const goal = {
+    x:2200,
+    y:canvas.height-220,
+    width:30,
+    height:160
+};
+
+let cameraX = 0;
+
+document.addEventListener("keydown", e=>{
+    keys[e.code] = true;
+});
+
+document.addEventListener("keyup", e=>{
+    keys[e.code] = false;
+});
+
+function collision(a,b){
+    return (
+        a.x < b.x + b.width &&
+        a.x + a.width > b.x &&
+        a.y < b.y + b.height &&
+        a.y + a.height > b.y
+    );
+}
+
+function update(){
+
+    player.velX = 0;
+
+    if(keys["ArrowRight"] || keys["KeyD"]){
+        player.velX = player.speed;
+    }
+
+    if(keys["ArrowLeft"] || keys["KeyQ"]){
+        player.velX = -player.speed;
+    }
+
+    if((keys["Space"]) && !player.jumping){
+        player.velY = -16;
+        player.jumping = true;
+    }
+
+    player.velY += gravity;
+
+    player.x += player.velX;
+    player.y += player.velY;
+
+    for(let p of platforms){
+
+        if(
+            player.x + player.width > p.x &&
+            player.x < p.x + p.width &&
+            player.y + player.height > p.y &&
+            player.y + player.height < p.y + p.height + 15 &&
+            player.velY >= 0
+        ){
+            player.y = p.y - player.height;
+            player.velY = 0;
+            player.jumping = false;
+        }
+    }
+
+    if(player.y > canvas.height){
+        player.x = 100;
+        player.y = 100;
+    }
+
+    cameraX = player.x - 300;
+
+    if(collision(player,goal)){
+        alert("YOU WIN!");
+        player.x = 100;
+        player.y = 100;
+    }
+}
+
+function draw(){
+
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+
+    ctx.save();
+    ctx.translate(-cameraX,0);
+
+    // soleil
+    ctx.fillStyle = "yellow";
+    ctx.beginPath();
+    ctx.arc(200,100,50,0,Math.PI*2);
+    ctx.fill();
+
+    // plateformes
+    ctx.fillStyle = "green";
+    for(let p of platforms){
+        ctx.fillRect(p.x,p.y,p.width,p.height);
+    }
+
+    // joueur
+    ctx.fillStyle = "red";
+    ctx.fillRect(
+        player.x,
+        player.y,
+        player.width,
+        player.height
+    );
+
+    // drapeau
+    ctx.fillStyle = "black";
+    ctx.fillRect(goal.x,goal.y,goal.width,goal.height);
+
+    ctx.fillStyle = "lime";
+    ctx.fillRect(goal.x+30,goal.y,70,40);
+
+    ctx.restore();
+
+    ctx.fillStyle="white";
+    ctx.font="24px Arial";
+    ctx.fillText("Q/D ou ←/→ pour bouger - ESPACE pour sauter",20,40);
+}
+
+function gameLoop(){
+    update();
+    draw();
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
 
 </body>
 </html>
