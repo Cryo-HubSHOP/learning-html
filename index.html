@@ -2,183 +2,131 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Mini Mario 2D</title>
+<title>FPS Mini Game</title>
 
 <style>
-body{
-    margin:0;
-    overflow:hidden;
-    background:#5ec9ff;
+body {
+    margin: 0;
+    overflow: hidden;
+    background: #111;
 }
 
-canvas{
-    display:block;
-    background:linear-gradient(#5ec9ff,#8be0ff);
+canvas {
+    display: block;
+    cursor: crosshair;
+}
+
+#hud {
+    position: absolute;
+    top: 10px;
+    left: 10px;
+    color: white;
+    font-family: Arial;
+    font-size: 20px;
 }
 </style>
 </head>
 
 <body>
 
+<div id="hud">Score: 0</div>
 <canvas id="game"></canvas>
 
 <script>
 const canvas = document.getElementById("game");
 const ctx = canvas.getContext("2d");
+const hud = document.getElementById("hud");
 
 canvas.width = window.innerWidth;
 canvas.height = window.innerHeight;
 
-const gravity = 0.8;
+let score = 0;
 
 const player = {
-    x:100,
-    y:100,
-    width:50,
-    height:50,
-    speed:6,
-    velX:0,
-    velY:0,
-    jumping:false
+    x: canvas.width/2,
+    y: canvas.height/2
 };
 
-const keys = {};
+const targets = [];
 
-const platforms = [
-    {x:0, y:canvas.height-60, width:3000, height:60},
-    {x:300, y:canvas.height-180, width:200, height:20},
-    {x:600, y:canvas.height-280, width:200, height:20},
-    {x:950, y:canvas.height-220, width:200, height:20},
-    {x:1300, y:canvas.height-320, width:250, height:20},
-    {x:1700, y:canvas.height-250, width:200, height:20}
-];
-
-const goal = {
-    x:2200,
-    y:canvas.height-220,
-    width:30,
-    height:160
-};
-
-let cameraX = 0;
-
-document.addEventListener("keydown", e=>{
-    keys[e.code] = true;
-});
-
-document.addEventListener("keyup", e=>{
-    keys[e.code] = false;
-});
-
-function collision(a,b){
-    return (
-        a.x < b.x + b.width &&
-        a.x + a.width > b.x &&
-        a.y < b.y + b.height &&
-        a.y + a.height > b.y
-    );
+function spawnTarget(){
+    targets.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height/2,
+        size: 40,
+        dx: (Math.random() - 0.5) * 4,
+        dy: (Math.random() - 0.5) * 2
+    });
 }
 
-function update(){
+for(let i=0;i<5;i++){
+    spawnTarget();
+}
 
-    player.velX = 0;
+function drawCrosshair(){
+    ctx.strokeStyle = "white";
+    ctx.beginPath();
+    ctx.moveTo(player.x - 10, player.y);
+    ctx.lineTo(player.x + 10, player.y);
+    ctx.moveTo(player.x, player.y - 10);
+    ctx.lineTo(player.x, player.y + 10);
+    ctx.stroke();
+}
 
-    if(keys["ArrowRight"] || keys["KeyD"]){
-        player.velX = player.speed;
+function drawTargets(){
+    for(let t of targets){
+        ctx.fillStyle = "red";
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.size, 0, Math.PI*2);
+        ctx.fill();
+
+        ctx.fillStyle = "darkred";
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.size/2, 0, Math.PI*2);
+        ctx.fill();
     }
+}
 
-    if(keys["ArrowLeft"] || keys["KeyQ"]){
-        player.velX = -player.speed;
+function updateTargets(){
+    for(let t of targets){
+        t.x += t.dx;
+        t.y += t.dy;
+
+        if(t.x < 0 || t.x > canvas.width) t.dx *= -1;
+        if(t.y < 0 || t.y > canvas.height/2) t.dy *= -1;
     }
+}
 
-    if((keys["Space"]) && !player.jumping){
-        player.velY = -16;
-        player.jumping = true;
-    }
+canvas.addEventListener("click", function(e){
+    const mx = e.clientX;
+    const my = e.clientY;
 
-    player.velY += gravity;
+    for(let i=targets.length-1;i>=0;i--){
+        let t = targets[i];
+        let dist = Math.hypot(mx - t.x, my - t.y);
 
-    player.x += player.velX;
-    player.y += player.velY;
-
-    for(let p of platforms){
-
-        if(
-            player.x + player.width > p.x &&
-            player.x < p.x + p.width &&
-            player.y + player.height > p.y &&
-            player.y + player.height < p.y + p.height + 15 &&
-            player.velY >= 0
-        ){
-            player.y = p.y - player.height;
-            player.velY = 0;
-            player.jumping = false;
+        if(dist < t.size){
+            targets.splice(i,1);
+            score++;
+            hud.innerHTML = "Score: " + score;
+            spawnTarget();
+            break;
         }
     }
+});
 
-    if(player.y > canvas.height){
-        player.x = 100;
-        player.y = 100;
-    }
+function loop(){
+    ctx.fillStyle = "#111";
+    ctx.fillRect(0,0,canvas.width,canvas.height);
 
-    cameraX = player.x - 300;
+    updateTargets();
+    drawTargets();
+    drawCrosshair();
 
-    if(collision(player,goal)){
-        alert("YOU WIN!");
-        player.x = 100;
-        player.y = 100;
-    }
+    requestAnimationFrame(loop);
 }
 
-function draw(){
-
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-
-    ctx.save();
-    ctx.translate(-cameraX,0);
-
-    // soleil
-    ctx.fillStyle = "yellow";
-    ctx.beginPath();
-    ctx.arc(200,100,50,0,Math.PI*2);
-    ctx.fill();
-
-    // plateformes
-    ctx.fillStyle = "green";
-    for(let p of platforms){
-        ctx.fillRect(p.x,p.y,p.width,p.height);
-    }
-
-    // joueur
-    ctx.fillStyle = "red";
-    ctx.fillRect(
-        player.x,
-        player.y,
-        player.width,
-        player.height
-    );
-
-    // drapeau
-    ctx.fillStyle = "black";
-    ctx.fillRect(goal.x,goal.y,goal.width,goal.height);
-
-    ctx.fillStyle = "lime";
-    ctx.fillRect(goal.x+30,goal.y,70,40);
-
-    ctx.restore();
-
-    ctx.fillStyle="white";
-    ctx.font="24px Arial";
-    ctx.fillText("Q/D ou ←/→ pour bouger - ESPACE pour sauter",20,40);
-}
-
-function gameLoop(){
-    update();
-    draw();
-    requestAnimationFrame(gameLoop);
-}
-
-gameLoop();
+loop();
 </script>
 
 </body>
